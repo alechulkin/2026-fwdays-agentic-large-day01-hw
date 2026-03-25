@@ -82,7 +82,9 @@ flowchart LR
   APP_NODE --> API
   APP_NODE --> Obs
   APP_NODE --> LUI
-  APP_NODE --> STC NEC ICC
+  APP_NODE --> STC
+  APP_NODE --> NEC
+  APP_NODE --> ICC
   AM -->|syncActionResult| SC
   AM --> ST
   STR --> HIST

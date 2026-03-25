@@ -89,9 +89,15 @@ All rationale/trade-offs below are inferred only from code structure and inline 
 ## Trade-offs (visible in code)
 
 - Pros: centralized integration & explicit contracts
-  - `createExcaliddrawAPI()` + `ExcalidrawProps` callbacks provide host apps with consistent integration points.
+  - `createExcalidrawAPI()` + `ExcalidrawProps` callbacks provide host apps with consistent integration points.
+- Pros: pragmatic stabilization via targeted fallbacks
+  - Lifecycle guards (`isLoading`) prevent host `onChange` from overwriting persisted data (explicitly documented in comments).
+  - Explicit UI fallbacks (HACK/FIXME notes) suggest pragmatic stabilization while the underlying architecture evolves.
 - Cons: high lifecycle/side-effect density
   - `App.tsx` contains extensive DOM listener registration and teardown; a reordering risk is explicitly documented (`componentDidUpdate` comment about needing order before flushing listeners).
+- Cons: hidden behavior and event-order coupling
+  - Several behaviors are enforced by “hidden” internal state updates (`contextMenu: null`, mobile transform suppression) that are not expressed as a formal external contract for host apps.
+  - Reliance on event ordering (`pointer up` cleanup; initialization gating) increases fragility around integration/testing and event delivery edge cases.
 - Complexity risk: update scheduling correctness depends on micro/macro sequencing
   - `packages/element/src/store.ts` has `TODO: Suspicious that this is called so many places. Seems error-prone.` and distinguishes micro vs macro actions in `scheduleMicroAction` / `commit`.
 - Test/state robustness needs attention
@@ -143,15 +149,6 @@ All rationale/trade-offs below are inferred only from code structure and inline 
   - `// HACK: Disable transform handles for linear elements on mobile...`
   - Conditional gating on `this.editorInterface.userAgent.isMobileDevice` and `selectedElements[0].points.length === 2`.
 - Risk: linear element editing may be less discoverable or impossible on mobile until the condition is revisited, causing UX inconsistency and feature gaps.
-
-## Trade-offs (visible in code)
-
-- Pros:
-  - Lifecycle guards (`isLoading`) prevent host `onChange` from overwriting persisted data (explicitly documented in comments).
-  - Explicit UI fallbacks (HACK/FIXME notes) suggest pragmatic stabilization while the underlying architecture evolves.
-- Cons:
-  - Several behaviors are enforced by “hidden” internal state updates (`contextMenu: null`, mobile transform suppression) that are not expressed as a formal external contract for host apps.
-  - Reliance on event ordering (`pointer up` cleanup; initialization gating) increases fragility around integration/testing and event delivery edge cases.
 
 ## Cross-doc Links
 

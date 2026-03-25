@@ -92,6 +92,14 @@ This PRD is reconstructed from code paths, component names, and inline markers (
 - **Synchronization/reconciliation constraints**
   - Element ordering/reconciliation uses `version`, `versionNonce`, and fractional `index` with explicit comments referencing collaboration and undo/redo ordering.
 
+## Non-goals
+
+- **No server-side rendering support**: the editor is expected to be rendered client-side (SSR workarounds are host responsibility).
+- **No real-time peer-to-peer sync**: collaboration is not a P2P protocol; real-time sync (if any) is mediated by host-controlled backends/services.
+- **No mobile-specific transform-handles parity guarantee**: mobile UX may intentionally differ (e.g., linear-element transform handles can be disabled via in-code HACK).
+- **Stakeholder placeholder**: Define which enterprise requirements are explicitly out of scope (e.g., audit logging, SSO, admin roles).
+- **Stakeholder placeholder**: Define which export/persistence guarantees are out of scope (e.g., deterministic SVG output across browser engines).
+
 ## Technical Deficiencies
 
 - Interaction and event model inconsistencies
