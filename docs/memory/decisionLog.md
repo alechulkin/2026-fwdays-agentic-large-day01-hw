@@ -105,55 +105,55 @@ All rationale/trade-offs below are inferred only from code structure and inline 
 
 ## Undocumented Behavior
 
-## Undocumented Behavior #1
+### Undocumented Behavior #1 — selection `pointerUp` cleanup (TODO in tests)
 
-- File: `packages/excalidraw/tests/selection.test.tsx`
-- What happens: Selection element lifecycle appears to rely on a `pointerUp` event to finalize cleanup; if `pointer up` is not triggered, a TODO notes a memory leak.
-- Where documented: partial — only as a TODO comment in the test file.
-- Evidence: test creates a selection on `pointerDown`, resizes on `pointerMove`, and then calls `pointerUp`; alongside it is a TODO: `There is a memory leak if pointer up is not triggered`.
-- Risk: missing `pointerUp` handling could leak resources/listeners in real usage and make state cleanup inconsistent (also creates fragile automation in tests).
+- **File:** `packages/excalidraw/tests/selection.test.tsx`
+- **What happens:** Selection element lifecycle appears to rely on a `pointerUp` event to finalize cleanup; if `pointer up` is not triggered, a TODO notes a memory leak.
+- **Where documented:** partial — only as a TODO comment in the test file.
+- **Evidence:** test creates a selection on `pointerDown`, resizes on `pointerMove`, and then calls `pointerUp`; alongside it is a TODO: `There is a memory leak if pointer up is not triggered`.
+- **Risk:** missing `pointerUp` handling could leak resources/listeners in real usage and make state cleanup inconsistent (also creates fragile automation in tests).
 
-## Undocumented Behavior #2
+### Undocumented Behavior #2 — `contextMenu: null` on `syncActionResult` (NOTE)
 
-- File: `packages/excalidraw/components/App.tsx`
-- What happens: When an action applies `appState` (or editingTextElement/contextMenu changes) through `syncActionResult`, the editor forcibly sets `contextMenu: null`, which can prevent context menu opening when triggered via an action or host programmatically.
-- Where documented: partial — in-code `NOTE` comment; not surfaced as an external/host-facing contract.
-- Evidence: in `syncActionResult`, `this.setState` merges `actionAppState` but unconditionally sets:
+- **File:** `packages/excalidraw/components/App.tsx`
+- **What happens:** When an action applies `appState` (or editingTextElement/contextMenu changes) through `syncActionResult`, the editor forcibly sets `contextMenu: null`, which can prevent context menu opening when triggered via an action or host programmatically.
+- **Where documented:** partial — in-code `NOTE` comment; not surfaced as an external/host-facing contract.
+- **Evidence:** in `syncActionResult`, `this.setState` merges `actionAppState` but unconditionally sets:
   - `// NOTE this will prevent opening context menu using an action or programmatically from the host...`
   - `contextMenu: null,`
-- Risk: host integrations (including AI or programmatic flows) may attempt to open a context menu and will silently fail, leading to confusing UX/regressions.
+- **Risk:** host integrations (including AI or programmatic flows) may attempt to open a context menu and will silently fail, leading to confusing UX/regressions.
 
-## Undocumented Behavior #3
+### Undocumented Behavior #3 — `onChange` gated by `isLoading` (lifecycle ordering)
 
-- File: `packages/excalidraw/components/App.tsx`
-- What happens: Host `onChange` callbacks are suppressed during initialization (`!this.state.isLoading` guard) to avoid notifying with empty elements; the component also documents an ordering dependency in `componentDidUpdate`.
-- Where documented: partial — inline comments in lifecycle methods.
-- Evidence:
+- **File:** `packages/excalidraw/components/App.tsx`
+- **What happens:** Host `onChange` callbacks are suppressed during initialization (`!this.state.isLoading` guard) to avoid notifying with empty elements; the component also documents an ordering dependency in `componentDidUpdate`.
+- **Where documented:** partial — inline comments in lifecycle methods.
+- **Evidence:**
   - `componentDidUpdate` comment: `// must be updated *before* state change listeners are triggered below`
   - `onChangeEmitter.trigger(...)` + `props.onChange(...)` guarded by:
     - `// Do not notify consumers if we're still loading the scene...`
     - `if (!this.state.isLoading) { ... }`
-- Risk: changing initialization/lifecycle ordering or removing the `isLoading` guard can trigger `onChange` with empty elements, which would overwrite persisted state in host apps (comment explicitly references localStorage).
+- **Risk:** changing initialization/lifecycle ordering or removing the `isLoading` guard can trigger `onChange` with empty elements, which would overwrite persisted state in host apps (comment explicitly references localStorage).
 
-## Undocumented Behavior #4
+### Undocumented Behavior #4 — WYSIWYG theme styling (FIXME / `onChangeEmitter`)
 
-- File: `packages/excalidraw/wysiwyg/textWysiwyg.tsx`
-- What happens: The WYSIWYG text editor style update mechanism depends on the editor’s `app.onChangeEmitter` behavior for `appState.theme`; the code contains a FIXME indicating this is a workaround until Store emits theme updates.
-- Where documented: FIXME comment inside the WYSIWYG module.
-- Evidence:
+- **File:** `packages/excalidraw/wysiwyg/textWysiwyg.tsx`
+- **What happens:** The WYSIWYG text editor style update mechanism depends on the editor’s `app.onChangeEmitter` behavior for `appState.theme`; the code contains a FIXME indicating this is a workaround until Store emits theme updates.
+- **Where documented:** FIXME comment inside the WYSIWYG module.
+- **Evidence:**
   - `// FIXME after we start emitting updates from Store for appState.theme`
   - Subscribes to `app.onChangeEmitter.on((elements) => { if (app.state.theme !== LAST_THEME) updateWysiwygStyle(); })`
-- Risk: theme-related text appearance may be stale or updated inconsistently if the Store emission semantics change, leading to visual regressions and hard-to-debug state sync bugs.
+- **Risk:** theme-related text appearance may be stale or updated inconsistently if the Store emission semantics change, leading to visual regressions and hard-to-debug state sync bugs.
 
-## Undocumented Behavior #5
+### Undocumented Behavior #5 — mobile linear-element transform handles (HACK)
 
-- File: `packages/excalidraw/components/App.tsx`
-- What happens: On mobile, transform/resize handles for linear elements can be disabled via a HACK condition, changing interaction affordances compared to other devices.
-- Where documented: in-code `HACK` comment/conditional branch.
-- Evidence:
+- **File:** `packages/excalidraw/components/App.tsx`
+- **What happens:** On mobile, transform/resize handles for linear elements can be disabled via a HACK condition, changing interaction affordances compared to other devices.
+- **Where documented:** in-code `HACK` comment/conditional branch.
+- **Evidence:**
   - `// HACK: Disable transform handles for linear elements on mobile...`
   - Conditional gating on `this.editorInterface.userAgent.isMobileDevice` and `selectedElements[0].points.length === 2`.
-- Risk: linear element editing may be less discoverable or impossible on mobile until the condition is revisited, causing UX inconsistency and feature gaps.
+- **Risk:** linear element editing may be less discoverable or impossible on mobile until the condition is revisited, causing UX inconsistency and feature gaps.
 
 ## Cross-doc Links
 
